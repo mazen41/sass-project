@@ -1,41 +1,28 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from '@/context/ThemeContext';
 import { useLang } from '@/context/LangContext';
 import { apiGetStories, Story, apiGetActiveSubscription, Subscription } from '@/lib/api';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import CustomCursor from '@/components/CustomCursor';
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      delay: i * 0.1,
-      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-    },
-  }),
-};
+import { Loader2, BookOpen, Video, ImageIcon, User, Crown, Sparkles, ArrowRight, Clock } from 'lucide-react';
 
 export default function DashboardPage() {
   const { isLoggedIn, user } = useAuth();
-  const { theme } = useTheme();
   const { locale } = useLang();
   const router = useRouter();
   const [stories, setStories] = useState<Story[]>([]);
+  const [activeSub, setActiveSub] = useState<Subscription | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const isRTL = locale === 'ar';
 
   useEffect(() => {
     if (!isLoggedIn) router.push('/login');
   }, [isLoggedIn, router]);
-
-  const [activeSub, setActiveSub] = useState<Subscription | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -49,6 +36,8 @@ export default function DashboardPage() {
         setActiveSub(subData.subscription);
       } catch {
         setStories([]);
+      } finally {
+        setLoading(false);
       }
     };
     loadDashboardData();
@@ -57,221 +46,195 @@ export default function DashboardPage() {
   if (!isLoggedIn) return null;
 
   const firstName = user?.name?.split(' ')[0] ?? '';
-  const greeting = locale === 'ar' ? `مرحباً، ${firstName}` : `Welcome back, ${firstName}`;
+  const greeting = isRTL ? `مرحباً، ${firstName}` : `Welcome back, ${firstName}`;
 
   return (
-    <div data-theme={theme} style={{ background: 'var(--bg)', minHeight: '100vh' }}>
-      <CustomCursor />
+    <div className="min-h-screen bg-[#0a0a0a] text-white" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
-      {/* Animated background blobs */}
-      <div className="dash-bg-blobs" aria-hidden>
-        <div className="dash-bg-blob dash-bg-blob-1" />
-        <div className="dash-bg-blob dash-bg-blob-2" />
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-10"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">
+              {isRTL ? 'استوديو القصص' : 'Story Studio'}
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+            {greeting} <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500">✦</span>
+          </h1>
+          <p className="text-gray-400 text-lg">
+            {isRTL ? 'استوديو القصص الاصطناعي الخاص بك في انتظارك.' : 'Your AI story studio is waiting for you.'}
+          </p>
+        </motion.div>
 
-      <div className="dash-wrap">
-        <div className="dash-inner">
+        {/* Hero CTA Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#111] border border-[#333] p-8 mb-8"
+        >
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle,_rgba(234,179,8,0.1),_transparent_70%)]" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(circle,_rgba(236,72,153,0.08),_transparent_70%)]" />
 
-          {/* ── Header ── */}
-          <motion.div
-            className="dash-header"
-            initial="hidden"
-            animate="visible"
-            variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-          >
-            <motion.div variants={fadeUp}>
-              <span className="kido-badge">
-                <span className="kido-badge-star">✦</span>
-                {locale === 'ar' ? 'استوديو القصص' : 'Story Studio'}
-              </span>
-            </motion.div>
-            <motion.h1 className="dash-greeting" variants={fadeUp}>
-              {greeting} <span className="gradient-text">✦</span>
-            </motion.h1>
-            <motion.p className="dash-sub" variants={fadeUp} custom={1}>
-              {locale === 'ar'
-                ? 'استوديو القصص الاصطناعي الخاص بك في انتظارك.'
-                : 'Your AI story studio is waiting for you.'}
-            </motion.p>
-          </motion.div>
-
-          {/* ── Grid ── */}
-          <div className="dash-grid">
-
-            {/* CTA Hero Card */}
-            <motion.div
-              className="dash-hero-card"
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ y: -4 }}
-            >
-              <div className="dash-hero-deco" />
-              <div className="dash-hero-deco-2" />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <span className="dash-hero-emoji">✦</span>
-                <h2 className="dash-hero-title">
-                  {locale === 'ar' ? 'ابدأ قصتك الأولى' : 'Create your first story'}
-                </h2>
-                <p className="dash-hero-sub">
-                  {locale === 'ar'
-                    ? 'ارفع صورة طفلك وشاهد العالم السينمائي يُولد في ثوانٍ.'
-                    : 'Upload a photo of your child and watch a cinematic world be born in seconds.'}
-                </p>
-                <div className="dash-hero-actions">
-                  <Link href="/create-story" className="btn btn-primary" style={{ textDecoration: 'none' }}>
-                    {locale === 'ar' ? '+ إنشاء قصة' : '+ Create Story'}
-                  </Link>
-                  <Link href="/#how" className="btn btn-ghost" style={{ textDecoration: 'none' }}>
-                    {locale === 'ar' ? 'عرض الأمثلة' : 'View Examples'}
-                  </Link>
-                </div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-pink-500 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
-            </motion.div>
+              <h2 className="text-2xl font-bold">{isRTL ? 'ابدأ قصتك الأولى' : 'Create your first story'}</h2>
+            </div>
+            <p className="text-gray-400 max-w-lg mb-6 text-lg">
+              {isRTL
+                ? 'ارفع صورة طفلك وشاهد العالم السينمائي يُولد في ثوانٍ.'
+                : 'Upload a photo of your child and watch a cinematic world be born in seconds.'}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/create-story"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 via-amber-400 to-pink-500 hover:from-yellow-400 hover:via-amber-300 hover:to-pink-400 text-black font-bold rounded-xl transition-all"
+              >
+                {isRTL ? 'إنشاء قصة' : 'Create Story'}
+                <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
+              </Link>
+              <Link
+                href="/#how"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-white font-medium rounded-xl transition-all"
+              >
+                {isRTL ? 'عرض الأمثلة' : 'View Examples'}
+              </Link>
+            </div>
+          </div>
+        </motion.div>
 
-            {/* Widget: My Stories */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* My Stories */}
             <motion.div
-              className="dash-widget"
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#333] transition-colors"
             >
-              <div>
-                <div className="widget-icon-wrap" style={{ background: 'linear-gradient(135deg, rgba(84,120,255,0.15), rgba(84,120,255,0.05))' }}>
-                  📖
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-blue-400" />
                 </div>
-                <p className="widget-title">{locale === 'ar' ? 'قصصي' : 'My Stories'}</p>
+                <span className="text-2xl font-bold text-white">{stories.length}</span>
               </div>
+              <h3 className="font-semibold mb-1">{isRTL ? 'قصصي' : 'My Stories'}</h3>
               {stories.length === 0 ? (
-                <div className="widget-empty-state">
-                  <div className="widget-empty-emoji">📚</div>
-                  <span>{locale === 'ar' ? 'لا توجد قصص بعد' : 'No stories yet'}</span>
-                  <Link href="/create-story" style={{ color: 'var(--k-blue)', fontSize: '0.85rem', marginTop: '0.5rem', textDecoration: 'none' }}>
-                    {locale === 'ar' ? 'إنشاء أول قصة →' : 'Create your first →'}
-                  </Link>
-                </div>
+                <p className="text-gray-500 text-sm">{isRTL ? 'لا توجد قصص بعد' : 'No stories yet'}</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  {stories.slice(0, 4).map((story) => (
+                <div className="space-y-2 mt-3">
+                  {stories.slice(0, 3).map((story) => (
                     <Link
                       key={story.id}
                       href={`/stories/${story.id}`}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.6rem',
-                        padding: '0.6rem',
-                        borderRadius: 'var(--r-md)',
-                        background: 'var(--surface)',
-                        border: '1.5px solid var(--border)',
-                        textDecoration: 'none',
-                        color: 'var(--text)',
-                      }}
+                      className="flex items-center gap-3 p-2 rounded-lg bg-[#1a1a1a] hover:bg-[#222] transition-colors group"
                     >
-                      <span style={{ fontSize: '1.2rem' }}>
-                        {story.photo_url ? '📸' : '✨'}
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontWeight: 600, fontSize: '0.85rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{story.title}</p>
-                        <p style={{ fontSize: '0.72rem', color: 'var(--text-3)', margin: 0 }}>
-                          {story.status === 'completed' ? '✓ Ready' : story.status === 'processing' ? '⏳ Processing...' : '📝 Draft'}
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
+                        <ImageIcon className="w-4 h-4 text-yellow-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate group-hover:text-yellow-400 transition-colors">{story.title}</p>
+                        <p className="text-xs text-gray-500">
+                          {story.status === 'completed' ? (isRTL ? '✓ جاهز' : '✓ Ready') : story.status === 'processing' ? (isRTL ? 'جاري المعالجة...' : 'Processing...') : (isRTL ? 'مسودة' : 'Draft')}
                         </p>
                       </div>
                     </Link>
                   ))}
-                  {stories.length > 4 && (
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', textAlign: 'center', marginTop: '0.25rem' }}>
-                      +{stories.length - 4} more
-                    </p>
+                  {stories.length > 3 && (
+                    <p className="text-xs text-gray-500 text-center">+{stories.length - 3} {isRTL ? 'المزيد' : 'more'}</p>
                   )}
                 </div>
               )}
             </motion.div>
 
-            {/* Widget: Videos */}
+            {/* My Videos */}
             <motion.div
-              className="dash-widget"
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#333] transition-colors"
             >
-              <div>
-                <div className="widget-icon-wrap" style={{ background: 'linear-gradient(135deg, rgba(255,62,155,0.15), rgba(255,62,155,0.05))' }}>
-                  🎬
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center">
+                  <Video className="w-5 h-5 text-pink-400" />
                 </div>
-                <p className="widget-title">{locale === 'ar' ? 'فيديوهاتي' : 'My Videos'}</p>
+                <span className="text-2xl font-bold text-white">0</span>
               </div>
-              <div className="widget-empty-state">
-                <div className="widget-empty-emoji">🎞️</div>
-                <span>{locale === 'ar' ? 'لا توجد فيديوهات بعد' : 'No videos yet'}</span>
-              </div>
+              <h3 className="font-semibold mb-1">{isRTL ? 'فيديوهاتي' : 'My Videos'}</h3>
+              <p className="text-gray-500 text-sm">{isRTL ? 'لا توجد فيديوهات بعد' : 'No videos yet'}</p>
+              <Link href="/create-story" className="inline-flex items-center gap-1 mt-4 text-sm text-yellow-400 hover:text-yellow-300 transition-colors">
+                {isRTL ? 'إنشاء فيديو' : 'Create video'}
+                <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+              </Link>
             </motion.div>
 
-            {/* Widget: Gallery */}
+            {/* Gallery */}
             <motion.div
-              className="dash-widget"
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#333] transition-colors"
             >
-              <div>
-                <div className="widget-icon-wrap" style={{ background: 'linear-gradient(135deg, rgba(255,222,66,0.18), rgba(255,222,66,0.06))' }}>
-                  🖼️
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <ImageIcon className="w-5 h-5 text-amber-400" />
                 </div>
-                <p className="widget-title">{locale === 'ar' ? 'معرضي' : 'My Gallery'}</p>
+                <span className="text-2xl font-bold text-white">0</span>
               </div>
-              <div className="widget-empty-state">
-                <div className="widget-empty-emoji">🎨</div>
-                <span>{locale === 'ar' ? 'لا توجد صور بعد' : 'No images yet'}</span>
-              </div>
+              <h3 className="font-semibold mb-1">{isRTL ? 'معرضي' : 'My Gallery'}</h3>
+              <p className="text-gray-500 text-sm">{isRTL ? 'لا توجد صور بعد' : 'No images yet'}</p>
+              <Link href="/create-story" className="inline-flex items-center gap-1 mt-4 text-sm text-yellow-400 hover:text-yellow-300 transition-colors">
+                {isRTL ? 'إنشاء صورة' : 'Create image'}
+                <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+              </Link>
             </motion.div>
 
-            {/* Widget: Account */}
+            {/* Account */}
             <motion.div
-              className="dash-widget"
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#333] transition-colors"
             >
-              <div>
-                <div className="widget-icon-wrap" style={{ background: 'linear-gradient(135deg, rgba(102,208,188,0.18), rgba(102,208,188,0.06))' }}>
-                  👤
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <User className="w-5 h-5 text-emerald-400" />
                 </div>
-                <p className="widget-title">{locale === 'ar' ? 'الحساب' : 'Account'}</p>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-                <div>
-                  <p style={{ color: 'var(--text-2)', fontSize: '0.88rem', margin: '0 0 0.25rem', fontWeight: 600 }}>
-                    {user?.name}
-                  </p>
-                  <p style={{ color: 'var(--text-3)', fontSize: '0.82rem', margin: '0 0 0.75rem' }}>
-                    {user?.email}
-                  </p>
-                  <span className="plan-badge" style={{ textTransform: 'uppercase' }}>
-                    {activeSub ? activeSub.plan?.name : (locale === 'ar' ? 'الخطة المجانية' : 'FREE PLAN')}
-                  </span>
-                </div>
-                <Link
-                  href="/billing"
-                  style={{
-                    color: 'var(--k-blue)',
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    marginTop: '1rem',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.25rem'
-                  }}
-                >
-                  {activeSub ? (locale === 'ar' ? 'إدارة الاشتراك ←' : 'Manage subscription →') : (locale === 'ar' ? 'ترقية الخطة ←' : 'Upgrade plan →')}
-                </Link>
+              <h3 className="font-semibold mb-1">{isRTL ? 'الحساب' : 'Account'}</h3>
+              <p className="text-white font-medium text-sm mb-1">{user?.name}</p>
+              <p className="text-gray-500 text-sm mb-3">{user?.email}</p>
+              <div className="flex items-center gap-2 mb-3">
+                <Crown className="w-3.5 h-3.5 text-yellow-400" />
+                <span className="text-xs font-semibold text-yellow-400 uppercase">
+                  {activeSub ? activeSub.plan?.name : (isRTL ? 'الخطة المجانية' : 'Free Plan')}
+                </span>
               </div>
+              <Link
+                href="/billing"
+                className="inline-flex items-center gap-1 text-sm text-yellow-400 hover:text-yellow-300 transition-colors"
+              >
+                {activeSub ? (isRTL ? 'إدارة الاشتراك' : 'Manage subscription') : (isRTL ? 'ترقية الخطة' : 'Upgrade plan')}
+                <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+              </Link>
             </motion.div>
-
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

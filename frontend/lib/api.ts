@@ -81,6 +81,14 @@ export async function apiLogin(payload: {
   });
 }
 
+export async function apiSocialRedirect(provider: 'google' | 'facebook' | 'apple'): Promise<{ url: string }> {
+  return apiFetch<{ url: string }>(`/auth/${provider}`);
+}
+
+export async function apiSocialCallback(provider: 'google' | 'facebook' | 'apple', code: string, state?: string): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>(`/auth/${provider}/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ''}`);
+}
+
 export async function apiLogout(): Promise<void> {
   await apiFetch('/logout', { method: 'POST' });
 }

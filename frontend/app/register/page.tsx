@@ -1,28 +1,20 @@
-'use client';
+﻿'use client';
 
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from '@/context/ThemeContext';
 import { useLang } from '@/context/LangContext';
-import { apiRegister } from '@/lib/api';
-import CustomCursor from '@/components/CustomCursor';
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number = 0) => ({
-    opacity: 1, y: 0,
-    transition: { duration: 0.65, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-  }),
-};
+import { apiRegister, apiSocialRedirect } from '@/lib/api';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const { theme } = useTheme();
-  const { t, locale } = useLang();
+  const { locale } = useLang();
+  const isRTL = locale === 'ar';
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,10 +23,13 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (password !== confirm) return setError(locale === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
+    if (password !== confirm) {
+      return setError(isRTL ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
+    }
     setLoading(true);
     setError('');
     try {
@@ -42,115 +37,186 @@ export default function RegisterPage() {
       login(res.token, res.user);
       router.push('/dashboard');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : (isRTL ? 'فشل التسجيل' : 'Registration failed'));
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleSocialAuth(provider: 'google' | 'facebook' | 'apple') {
+    setSocialLoading(provider);
+    try {
+      const { url } = await apiSocialRedirect(provider);
+      window.location.href = url;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : (isRTL ? 'فشل الاتصال' : 'Connection failed'));
+      setSocialLoading(null);
+    }
+  }
+
   return (
-    <div data-theme={theme} style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <CustomCursor />
-      <main className="auth-layout">
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Left: Cinematic Panel */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#0a0a0a] to-[#111]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(234,179,8,0.12),_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(236,72,153,0.08),_transparent_50%)]" />
 
-        {/* ── Left: Illustration Panel ── */}
-        <div className="auth-illustration">
-          <div className="auth-illus-blob auth-illus-blob-1" />
-          <div className="auth-illus-blob auth-illus-blob-2" />
-          <div className="auth-illus-blob auth-illus-blob-3" />
-          <div style={{ position: 'absolute', top: '12%', left: '10%', fontSize: '2rem', animation: 'float 7s ease-in-out infinite', animationDelay: '-1s', pointerEvents: 'none', zIndex: 1 }}>⭐</div>
-          <div style={{ position: 'absolute', top: '18%', right: '12%', fontSize: '1.5rem', animation: 'float 9s ease-in-out infinite', animationDelay: '-3s', pointerEvents: 'none', zIndex: 1 }}>✨</div>
-          <div style={{ position: 'absolute', bottom: '15%', right: '10%', fontSize: '2.5rem', animation: 'float 6s ease-in-out infinite', animationDelay: '-2s', pointerEvents: 'none', zIndex: 1 }}>🌙</div>
-          <div style={{ position: 'absolute', bottom: '22%', left: '8%', fontSize: '1.8rem', animation: 'float 8s ease-in-out infinite', animationDelay: '-4s', pointerEvents: 'none', zIndex: 1 }}>💫</div>
-
-          <motion.div className="auth-illus-content" initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}>
-            <span className="auth-illus-big-icon">🌟</span>
-            <h2 className="auth-illus-title">{locale === 'ar' ? 'ابدأ الإبداع اليوم!' : 'Start creating today!'}</h2>
-            <p className="auth-illus-sub">{locale === 'ar' ? 'آلاف الأسر تصنع ذكريات سينمائية مع أطفالها كل يوم.' : 'Thousands of families are creating cinematic memories with their children every day.'}</p>
-            <div className="auth-char-cards">
-              {[{ emoji: '🚀', delay: 0.5 }, { emoji: '🐉', delay: 0.65 }, { emoji: '🧜', delay: 0.8 }, { emoji: '🦁', delay: 0.95 }].map((item, i) => (
-                <motion.div key={i} className="auth-char-card" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: item.delay, duration: 0.5 }}>
-                  {item.emoji}
-                </motion.div>
-              ))}
-            </div>
-            <div className="auth-stats">
-              {[
-                { num: '10K+', label: locale === 'ar' ? 'أسرة' : 'Families' },
-                { num: '50K+', label: locale === 'ar' ? 'قصة' : 'Stories' },
-                { num: '4.9★', label: locale === 'ar' ? 'تقييم' : 'Rating' },
-              ].map((stat) => (
-                <div key={stat.label} style={{ textAlign: 'center' }}>
-                  <div className="auth-stat-num">{stat.num}</div>
-                  <div className="auth-stat-label">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* ── Right: Form Panel ── */}
-        <div className="auth-form-side">
-          <motion.div className="auth-card" initial={{ opacity: 0, x: 36 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}>
-
-            <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginBottom: '1.75rem', fontFamily: 'Fredoka, sans-serif', fontSize: '1.4rem', fontWeight: 700, background: 'var(--grad-magic)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-              ✦ StoryHero
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+          <div>
+            <Link href="/" className="text-2xl font-bold tracking-tight">
+              <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-pink-500 bg-clip-text text-transparent">StoryHero</span>
             </Link>
+          </div>
 
-            <motion.div variants={fadeUp} initial="hidden" animate="visible">
-              <h1 className="auth-form-title">{t('register_title')}</h1>
-              <p className="auth-form-sub">{t('register_sub')}</p>
-            </motion.div>
-
-            <motion.form onSubmit={onSubmit} style={{ display: 'grid', gap: 0 }} initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } }}>
-
-              <motion.div className="inp-group" variants={fadeUp}>
-                <label className="inp-label">{t('register_name')}</label>
-                <input className="inp" type="text" placeholder={locale === 'ar' ? 'الاسم الكامل' : 'Full name'} value={name} onChange={(e) => setName(e.target.value)} required />
-              </motion.div>
-
-              <motion.div className="inp-group" variants={fadeUp}>
-                <label className="inp-label">{t('register_email')}</label>
-                <input className="inp" type="email" placeholder={locale === 'ar' ? 'بريدك الإلكتروني' : 'you@example.com'} value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </motion.div>
-
-              <motion.div className="inp-group" variants={fadeUp}>
-                <label className="inp-label">{t('register_password')}</label>
-                <div style={{ position: 'relative' }}>
-                  <input className="inp" type={showPass ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ paddingRight: '3rem' }} />
-                  <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: '0.9rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', opacity: 0.5, padding: 0 }} aria-label="Toggle password">
-                    {showPass ? '🙈' : '👁️'}
-                  </button>
-                </div>
-              </motion.div>
-
-              <motion.div className="inp-group" variants={fadeUp}>
-                <label className="inp-label">{t('register_confirm')}</label>
-                <div style={{ position: 'relative' }}>
-                  <input className="inp" type={showConfirm ? 'text' : 'password'} placeholder="••••••••" value={confirm} onChange={(e) => setConfirm(e.target.value)} required style={{ paddingRight: '3rem' }} />
-                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ position: 'absolute', right: '0.9rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', opacity: 0.5, padding: 0 }} aria-label="Toggle confirm password">
-                    {showConfirm ? '🙈' : '👁️'}
-                  </button>
-                </div>
-              </motion.div>
-
-              {error && <motion.div className="auth-error" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{error}</motion.div>}
-
-              <motion.div variants={fadeUp} style={{ marginTop: '0.5rem' }}>
-                <motion.button className="btn btn-primary" type="submit" disabled={loading} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} style={{ width: '100%', justifyContent: 'center' }}>
-                  {loading
-                    ? <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ animation: 'spin-star 1s linear infinite', display: 'inline-block' }}>⏳</span>{t('register_loading')}</span>
-                    : <>{t('register_submit')} ✦</>}
-                </motion.button>
-              </motion.div>
-            </motion.form>
-
-            <p className="auth-link" style={{ marginTop: '1.5rem' }}>
-              {t('register_have_account')}{' '}<Link href="/login">{t('register_login_link')}</Link>
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="max-w-md">
+            <h2 className="text-4xl font-bold mb-4 leading-tight">
+              {isRTL ? 'ابدأ رحلتك الإبداعية' : 'Start your creative journey'}
+              <br />
+              <span className="bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">
+                {isRTL ? 'اليوم' : 'today'}
+              </span>
+            </h2>
+            <p className="text-gray-400 text-lg leading-relaxed">
+              {isRTL ? 'انضم إلى آلاف العائلات التي تصنع ذكريات سحرية مع أطفالها.' : 'Join thousands of families creating magical memories with their kids.'}
             </p>
           </motion.div>
+
+          <div className="flex gap-6 text-sm text-gray-500">
+            <span>10K+ {isRTL ? 'عائلة' : 'Families'}</span>
+            <span>50K+ {isRTL ? 'قصة' : 'Stories'}</span>
+            <span>4.9★ {isRTL ? 'تقييم' : 'Rating'}</span>
+          </div>
         </div>
-      </main>
+      </div>
+
+      {/* Right: Form Panel */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-[420px]"
+        >
+          <div className="lg:hidden mb-8 text-center">
+            <Link href="/" className="text-2xl font-bold">
+              <span className="bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">StoryHero</span>
+            </Link>
+          </div>
+
+          <h1 className="text-3xl font-bold mb-2">{isRTL ? 'إنشاء حساب' : 'Create Account'}</h1>
+          <p className="text-gray-400 mb-8">{isRTL ? 'سجل مجاناً وابدأ في إنشاء قصص سينمائية.' : 'Sign up for free and start creating cinematic stories.'}</p>
+
+          {/* Social Auth */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {(['google', 'facebook', 'apple'] as const).map((provider) => (
+              <button
+                key={provider}
+                onClick={() => handleSocialAuth(provider)}
+                disabled={!!socialLoading}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+              >
+                {socialLoading === provider ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : provider === 'google' ? (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5.04c1.67 0 3.16.58 4.33 1.71l3.24-3.24C17.47 1.18 14.93 0 12 0 7.31 0 3.23 2.69 1.23 6.57l3.76 2.92C6.09 6.34 8.82 5.04 12 5.04z"/><path fill="#4285F4" d="M23.5 12.23c0-.87-.08-1.71-.22-2.53H12v4.78h6.45c-.28 1.47-1.11 2.72-2.36 3.56l3.82 2.96C21.8 18.76 23.5 15.72 23.5 12.23z"/><path fill="#FBBC05" d="M5.04 14.49l-3.76 2.92C3.23 21.31 7.31 24 12 24c2.93 0 5.47-.98 7.27-2.91l-3.82-2.96c-.98.66-2.24 1.05-3.45 1.05-2.66 0-4.91-1.8-5.71-4.17z"/><path fill="#34A853" d="M12 10.43v4.78h6.45c-.28 1.47-1.11 2.72-2.36 3.56l3.82 2.96C21.8 18.76 23.5 15.72 23.5 12.23z"/></svg>
+                ) : provider === 'facebook' ? (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.016 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                ) : (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.85-1.52 2.37-2.48 4.02-2.51 1.34-.01 2.55.91 3.34.91.78 0 2.26-1.29 3.81-1.08.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                )}
+                <span className="hidden sm:inline capitalize">{provider}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#333]" /></div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-[#0a0a0a] px-3 text-gray-500">{isRTL ? 'أو بالبريد الإلكتروني' : 'Or with email'}</span>
+            </div>
+          </div>
+
+          <form onSubmit={onSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-950/50 border border-red-900/50 text-red-400 px-4 py-3 rounded-xl text-sm">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">{isRTL ? 'الاسم الكامل' : 'Full Name'}</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={isRTL ? 'اسمك' : 'John Doe'}
+                className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500/50 transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">{isRTL ? 'البريد الإلكتروني' : 'Email'}</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={isRTL ? 'بريدك الإلكتروني' : 'you@example.com'}
+                className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500/50 transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">{isRTL ? 'كلمة المرور' : 'Password'}</label>
+              <div className="relative">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500/50 transition-all"
+                  required
+                />
+                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors" aria-label="Toggle password">
+                  {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">{isRTL ? 'تأكيد كلمة المرور' : 'Confirm Password'}</label>
+              <div className="relative">
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 bg-[#111] border border-[#333] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/20 focus:border-yellow-500/50 transition-all"
+                  required
+                />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors" aria-label="Toggle confirm password">
+                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-yellow-500 via-amber-400 to-pink-500 hover:from-yellow-400 hover:via-amber-300 hover:to-pink-400 text-black font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {loading ? <Loader2 size={20} className="animate-spin" /> : isRTL ? 'إنشاء حساب' : 'Create Account'}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-gray-400 text-sm">
+            {isRTL ? 'لديك حساب بالفعل؟ ' : 'Already have an account? '}
+            <Link href="/login" className="text-yellow-400 hover:text-yellow-300 font-medium transition-colors">{isRTL ? 'سجل دخولك' : 'Sign in'}</Link>
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }
