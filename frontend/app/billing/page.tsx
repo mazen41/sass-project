@@ -30,7 +30,6 @@ import {
   AlertCircle,
   Loader2,
   Calendar,
-  Lock,
   ArrowRight,
   Sparkles,
   Layers,
@@ -151,7 +150,7 @@ export default function BillingPage() {
       }
       
       if (url) {
-        window.location.href = url;
+        window.location.assign(url);
       } else {
         throw new Error('Redirection URL not returned.');
       }

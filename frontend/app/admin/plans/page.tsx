@@ -83,7 +83,6 @@ export default function PlansPage() {
     stripe_price_id: '',
     paypal_plan_id: '',
   });
-
   // Addon Modal & State
   const [showAddonModal, setShowAddonModal] = useState(false);
   const [editingAddon, setEditingAddon] = useState<PlanAddon | null>(null);
