@@ -6,13 +6,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLang } from '@/context/LangContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const { t, toggleLocale, locale } = useLang();
   const { isLoggedIn, logout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
+  const isPublicPage = ['/', '/privacy', '/terms'].includes(pathname);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -36,8 +38,8 @@ export default function Navbar() {
 
   const navLinks = isLoggedIn
     ? [
-        { href: '/dashboard', label: `👋 ${user?.name?.split(' ')[0] ?? 'Dashboard'}` },
-        ...(user?.role === 'super_admin' ? [{ href: '/admin', label: locale === 'ar' ? '🛡️ لوحة الإدارة' : '🛡️ Admin' }] : []),
+        { href: '/dashboard', label: locale === 'ar' ? 'لوحة التحكم' : 'Dashboard' },
+        ...(user?.role === 'super_admin' ? [{ href: '/admin', label: locale === 'ar' ? 'لوحة الإدارة' : 'Admin' }] : []),
       ]
     : [
         { href: '#how',      label: locale === 'ar' ? 'كيف يعمل' : 'How it works' },
@@ -51,7 +53,7 @@ export default function Navbar() {
 
           {/* ── Logo ── */}
           <Link href="/" className="nav-logo-kido" onClick={() => setMobileOpen(false)}>
-            <span className="nav-logo-star">✦</span>
+            <span className="nav-logo-star" style={{ color: 'var(--k-yellow)' }}>✦</span>
             StoryHero
           </Link>
 
@@ -73,7 +75,7 @@ export default function Navbar() {
 
             {/* Theme toggle */}
             <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-              <div className="theme-toggle-thumb">{theme === 'dark' ? '🌙' : '☀️'}</div>
+              <div className="theme-toggle-thumb" />
             </button>
 
             {/* Auth buttons — desktop only */}
@@ -88,7 +90,7 @@ export default function Navbar() {
                     {t('nav_login')}
                   </Link>
                   <Link href="/register" className="btn btn-primary" style={{ padding: '0.52rem 1.25rem', fontSize: '0.86rem' }}>
-                    {t('nav_register')} ✦
+                    {t('nav_register')}
                   </Link>
                 </>
               )}
@@ -217,7 +219,7 @@ export default function Navbar() {
                     {t('nav_login')}
                   </Link>
                   <Link href="/register" className="btn btn-primary" style={{ justifyContent: 'center' }} onClick={() => setMobileOpen(false)}>
-                    {t('nav_register')} ✦
+                    {t('nav_register')}
                   </Link>
                 </div>
               )}
@@ -230,7 +232,7 @@ export default function Navbar() {
                 <button className={`lang-btn ${locale === 'ar' ? 'active' : ''}`} onClick={() => locale !== 'ar' && toggleLocale()}>AR</button>
               </div>
               <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
-                <div className="theme-toggle-thumb">{theme === 'dark' ? '🌙' : '☀️'}</div>
+                <div className="theme-toggle-thumb" />
               </button>
             </div>
           </motion.div>

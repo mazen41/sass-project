@@ -10,41 +10,41 @@
    DESIGN TOKENS
    ============================================================ */
 :root {
-  /* ── Brand Palette — blending all 7 palettes ── */
-  --k-yellow:   #FFDE42;   /* Electric Hero */
-  --k-sky:      #53CBF3;   /* Electric Hero */
-  --k-blue:     #5478FF;   /* Electric Hero */
-  --k-navy:     #111FA2;   /* Electric Hero */
-  --k-pink:     #FF3E9B;   /* Pink Lagoon */
-  --k-rose:     #FF88BA;   /* Pink Lagoon */
-  --k-teal:     #3A8B95;   /* Pink Lagoon */
-  --k-mint:     #66D0BC;   /* Pink Lagoon */
-  --k-orange:   #E87F24;   /* Golden Breeze */
-  --k-gold:     #FFC81E;   /* Golden Breeze */
-  --k-cream:    #FEFDDF;   /* Golden Breeze */
-  --k-purple:   #FFA6FB;   /* Candy Pop */
-  --k-coral:    #FA6781;   /* Soft Tropics */
-  --k-green:    #59B292;   /* Soft Tropics */
-  --k-indigo:   #4B5BD6;
-  --k-aqua:     #03AED2;   /* Neon Sunset */
-  --k-lemon:    #F8DE22;   /* Neon Sunset */
-  --k-peach:    #FAE7CB;   /* Soft Tropics */
-  --k-sand:     #FFE8BE;   /* Vintage Coast */
-  --k-amber:    #FFC94D;   /* Soft Tropics */
+  /* ── Premium Cinematic Palette ── */
+  --k-yellow:   #E5C158;   /* Muted Premium Gold */
+  --k-sky:      #64b5f6;   /* Ice Blue */
+  --k-blue:     #0077ff;   /* Professional Blue */
+  --k-navy:     #0a0b10;   /* Deep Space Black */
+  --k-pink:     #ff4081;   /* Accent Coral Pink */
+  --k-rose:     #ff80ab;
+  --k-teal:     #00838f;
+  --k-mint:     #00bfa5;
+  --k-orange:   #ff6d00;
+  --k-gold:     #D4AF37;   /* Metallic Gold */
+  --k-cream:    #f5f5f7;
+  --k-purple:   #b388ff;
+  --k-coral:    #ff3d00;
+  --k-green:    #2e7d32;
+  --k-indigo:   #3d5afe;
+  --k-aqua:     #00e5ff;
+  --k-lemon:    #ffd600;
+  --k-peach:    #ffe0b2;
+  --k-sand:     #d7ccc8;
+  --k-amber:    #ffb300;
 
-  /* ── Gradients ── */
-  --grad-magic:   linear-gradient(135deg, #5478FF 0%, #FFA6FB 55%, #FF3E9B 100%);
-  --grad-hero:    linear-gradient(135deg, #FFDE42 0%, #E87F24 45%, #FF3E9B 100%);
-  --grad-sky:     linear-gradient(135deg, #03AED2 0%, #5478FF 100%);
-  --grad-candy:   linear-gradient(135deg, #FF61F8 0%, #FFA6FB 100%);
-  --grad-sunny:   linear-gradient(135deg, #FFC81E 0%, #E87F24 100%);
-  --grad-mint:    linear-gradient(135deg, #66D0BC 0%, #3A8B95 100%);
-  --grad-warm:    linear-gradient(135deg, #FFC94D 0%, #FA6781 100%);
-  --grad-dream:   linear-gradient(160deg, #53CBF3 0%, #5478FF 50%, #FFA6FB 100%);
-  --grad-text:    linear-gradient(135deg, #5478FF, #FF3E9B, #FFDE42);
-  --grad-forest:  linear-gradient(160deg, #1a3a2e 0%, #59B292 100%);
-  --grad-peach:   linear-gradient(135deg, #FAE7CB 0%, #FFC94D 100%);
-  --grad-coast:   linear-gradient(135deg, #427AB5 0%, #F7DD7D 100%);
+  /* ── Premium Cinematic Gradients ── */
+  --grad-magic:   linear-gradient(135deg, #ffffff 0%, #E5C158 50%, #D4AF37 100%);
+  --grad-hero:    linear-gradient(135deg, #ffffff 0%, #E5C158 50%, #D4AF37 100%);
+  --grad-sky:     linear-gradient(135deg, #00d4ff 0%, #0077ff 100%);
+  --grad-candy:   linear-gradient(135deg, #ff4081 0%, #ff80ab 100%);
+  --grad-sunny:   linear-gradient(135deg, #D4AF37 0%, #E5C158 100%);
+  --grad-mint:    linear-gradient(135deg, #00bfa5 0%, #00838f 100%);
+  --grad-warm:    linear-gradient(135deg, #E5C158 0%, #ff6d00 100%);
+  --grad-dream:   linear-gradient(160deg, #050505 0%, #0a0b10 50%, #1a1a24 100%);
+  --grad-text:    linear-gradient(135deg, #ffffff 0%, #E5C158 50%, #D4AF37 100%);
+  --grad-forest:  linear-gradient(160deg, #050d0a 0%, #00bfa5 100%);
+  --grad-peach:   linear-gradient(135deg, #ffe0b2 0%, #ffb300 100%);
+  --grad-coast:   linear-gradient(135deg, #0a1128 0%, #E5C158 100%);
 
   /* ── Easing ── */
   --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
@@ -52,23 +52,23 @@
   --ease-bounce: cubic-bezier(0.68, -0.55, 0.27, 1.55);
 
   /* ── Radii ── */
-  --r-sm:   12px;
-  --r-md:   20px;
-  --r-lg:   28px;
-  --r-xl:   36px;
-  --r-2xl:  48px;
-  --r-3xl:  64px;
+  --r-sm:   4px;
+  --r-md:   8px;
+  --r-lg:   12px;
+  --r-xl:   16px;
+  --r-2xl:  24px;
+  --r-3xl:  32px;
   --r-full: 9999px;
 
   /* ── Shadows ── */
-  --shadow-card:   0 8px 32px rgba(84,120,255,0.14), 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-float:  0 24px 64px rgba(84,120,255,0.2), 0 6px 20px rgba(0,0,0,0.08);
-  --shadow-glow:   0 0 48px rgba(84,120,255,0.4);
-  --shadow-pink:   0 8px 32px rgba(255,62,155,0.3);
-  --shadow-yellow: 0 8px 32px rgba(255,222,66,0.4);
-  --shadow-magic:  0 20px 60px rgba(84,120,255,0.25), 0 0 0 1px rgba(84,120,255,0.08);
+  --shadow-card:   0 4px 20px rgba(0,0,0,0.4), 0 0 1px rgba(255,255,255,0.08);
+  --shadow-float:  0 12px 40px rgba(0,0,0,0.6), 0 0 1px rgba(255,255,255,0.15);
+  --shadow-glow:   0 0 32px rgba(229,193,88,0.15);
+  --shadow-pink:   0 4px 20px rgba(255,64,129,0.2);
+  --shadow-yellow: 0 4px 20px rgba(229,193,88,0.25);
+  --shadow-magic:  0 12px 40px rgba(0,0,0,0.5), 0 0 1px rgba(229,193,88,0.2);
 
-  /* ── kido-specific ── */
+  /* ── aliases ── */
   --kido-yellow:  var(--k-yellow);
   --kido-blue:    var(--k-blue);
   --kido-pink:    var(--k-pink);
@@ -85,67 +85,65 @@
 }
 
 /* ============================================================
-   LIGHT THEME — Sunny Cream Canvas (Learnly × EverCare × Penny Juice)
-   Bright white base, warm cream accents, vivid pops of color
+   LIGHT THEME ── Studio Light (Sleek Slate, Muted Gold Accent)
    ============================================================ */
 :root, [data-theme="light"] {
-  --bg:            #FFFDF7;
-  --bg-2:          #FFF8EE;
-  --bg-3:          #FFF1DC;
-  --bg-soft:       #FFFFFF;
-  --surface:       rgba(255,255,255,0.96);
-  --surface-2:     rgba(255,253,247,0.85);
+  --bg:            #fafafa;
+  --bg-2:          #f4f4f6;
+  --bg-3:          #ebebeb;
+  --bg-soft:       #ffffff;
+  --surface:       rgba(255,255,255,0.9);
+  --surface-2:     rgba(244,244,246,0.85);
   --surface-hover: rgba(255,255,255,1);
-  --border:        rgba(232,127,36,0.15);
-  --border-hover:  rgba(84,120,255,0.5);
-  --border-soft:   rgba(255,222,66,0.18);
-  --text:          #2C1A0E;
-  --text-2:        rgba(44,26,14,0.62);
-  --text-3:        rgba(44,26,14,0.38);
-  --nav-bg:        rgba(255,253,247,0.92);
-  --input-bg:      #FFFFFF;
-  --glow-primary:  rgba(84,120,255,0.14);
-  --glow-pink:     rgba(255,62,155,0.14);
-  --glow-yellow:   rgba(255,201,30,0.32);
+  --border:        rgba(0,0,0,0.08);
+  --border-hover:  rgba(229,193,88,0.5);
+  --border-soft:   rgba(0,0,0,0.04);
+  --text:          #111111;
+  --text-2:        rgba(17,17,17,0.7);
+  --text-3:        rgba(17,17,17,0.45);
+  --nav-bg:        rgba(250,250,250,0.85);
+  --input-bg:      #ffffff;
+  --glow-primary:  rgba(229,193,88,0.1);
+  --glow-pink:     rgba(255,64,129,0.08);
+  --glow-yellow:   rgba(229,193,88,0.15);
   --neon-1:        var(--k-yellow);
-  --neon-2:        var(--k-aqua);
-  --neon-3:        var(--k-coral);
+  --neon-2:        var(--k-sky);
+  --neon-3:        var(--k-pink);
   /* section tints */
-  --tint-blue:     rgba(3,174,210,0.07);
-  --tint-peach:    rgba(250,231,203,0.55);
-  --tint-mint:     rgba(89,178,146,0.08);
+  --tint-blue:     rgba(0,119,255,0.04);
+  --tint-peach:    rgba(229,193,88,0.04);
+  --tint-mint:     rgba(0,191,165,0.04);
 }
 
 /* ============================================================
-   DARK THEME — Wilderlore Enchanted Forest
-   Rich deep teal-indigo, warm golden accents, NOT flat black
+   DARK THEME ── Premium Cinematic (Artlist Obsidian)
    ============================================================ */
 [data-theme="dark"] {
-  --bg:            #0E1A18;
-  --bg-2:          #132420;
-  --bg-3:          #1A3028;
-  --bg-soft:       #0C1715;
-  --surface:       rgba(255,255,255,0.07);
-  --surface-2:     rgba(255,255,255,0.04);
-  --surface-hover: rgba(102,208,188,0.12);
-  --border:        rgba(102,208,188,0.15);
-  --border-hover:  rgba(255,201,30,0.55);
-  --border-soft:   rgba(255,255,255,0.06);
-  --text:          #F5F0E8;
-  --text-2:        rgba(245,240,232,0.65);
-  --text-3:        rgba(245,240,232,0.35);
-  --nav-bg:        rgba(14,26,24,0.92);
-  --input-bg:      rgba(255,255,255,0.06);
-  --glow-primary:  rgba(3,174,210,0.35);
-  --glow-pink:     rgba(250,103,129,0.3);
-  --glow-yellow:   rgba(255,201,30,0.28);
-  --neon-1:        #FFC94D;
-  --neon-2:        #66D0BC;
-  --neon-3:        #FA6781;
+  --bg:            #050505;
+  --bg-2:          #0b0c10;
+  --bg-3:          #121319;
+  --bg-soft:       #020202;
+  --surface:       rgba(20,20,25,0.65);
+  --surface-2:     rgba(10,10,12,0.8);
+  --surface-hover: rgba(255,255,255,0.05);
+  --border:        rgba(255,255,255,0.08);
+  --border-hover:  rgba(229,193,88,0.6);
+  --border-soft:   rgba(255,255,255,0.04);
+  --text:          #ffffff;
+  --text-2:        rgba(255,255,255,0.7);
+  --text-3:        rgba(255,255,255,0.45);
+  --nav-bg:        rgba(5,5,5,0.85);
+  --input-bg:      rgba(255,255,255,0.03);
+  --glow-primary:  rgba(229,193,88,0.18);
+  --glow-pink:     rgba(255,64,129,0.12);
+  --glow-yellow:   rgba(229,193,88,0.22);
+  --neon-1:        #E5C158;
+  --neon-2:        #00e5ff;
+  --neon-3:        #ff4081;
   /* section tints */
-  --tint-blue:     rgba(3,174,210,0.08);
-  --tint-peach:    rgba(255,201,77,0.06);
-  --tint-mint:     rgba(89,178,146,0.1);
+  --tint-blue:     rgba(0,119,255,0.06);
+  --tint-peach:    rgba(229,193,88,0.06);
+  --tint-mint:     rgba(0,191,165,0.06);
 }
 
 /* ============================================================
@@ -172,15 +170,15 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: 'Nunito', sans-serif;
+  font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
 h1, h2, h3, h4, .font-display {
-  font-family: 'Fredoka', 'Baloo 2', sans-serif;
-  letter-spacing: -0.01em;
+  font-family: 'Outfit', 'Syne', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 /* ============================================================
@@ -279,7 +277,7 @@ body:has(button:hover) #cursor-ring {
 
 /* Logo */
 .nav-logo-kido {
-  font-family: 'Fredoka', 'Baloo 2', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.65rem;
   font-weight: 700;
   text-decoration: none;
@@ -319,18 +317,19 @@ body:has(button:hover) #cursor-ring {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.82rem 1.7rem;
+  padding: 0.82rem 1.8rem;
   border-radius: var(--r-full);
   text-decoration: none;
-  font-family: 'Fredoka', 'Baloo 2', sans-serif;
-  font-weight: 600;
-  font-size: 0.96rem;
-  border: 2px solid transparent;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  border: 1.5px solid transparent;
   cursor: pointer;
-  transition: all 0.28s var(--ease-out) !important;
+  transition: all 0.3s var(--ease-out) !important;
   position: relative;
   overflow: hidden;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -339,62 +338,68 @@ body:has(button:hover) #cursor-ring {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 0.2s ease !important;
-  background: rgba(255,255,255,0.12);
+  transition: opacity 0.25s ease !important;
+  background: rgba(255, 255, 255, 0.08);
 }
 .btn:hover::before { opacity: 1; }
 
 .btn-primary {
-  background: var(--grad-magic);
-  color: white;
-  box-shadow: 0 6px 24px rgba(84,120,255,0.38), 0 2px 8px rgba(0,0,0,0.1);
+  background: #ffffff;
+  color: #050505;
+  border-color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.1);
 }
 .btn-primary:hover {
-  transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 14px 44px rgba(84,120,255,0.5), 0 4px 14px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+  background: var(--k-yellow);
+  border-color: var(--k-yellow);
+  box-shadow: 0 0 24px rgba(229, 193, 88, 0.4);
 }
 
 .btn-secondary {
   background: var(--grad-sunny);
-  color: white;
+  color: #050505;
   box-shadow: var(--shadow-yellow);
+  border-color: var(--k-yellow);
 }
 .btn-secondary:hover {
-  transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 14px 40px rgba(255,222,66,0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(229,193,88,0.4);
 }
 
 .btn-pink {
-  background: var(--grad-candy);
-  color: white;
-  box-shadow: var(--shadow-pink);
+  background: transparent;
+  color: #ffffff;
+  border-color: var(--k-pink);
+  box-shadow: 0 0 12px rgba(255, 64, 129, 0.1);
 }
 .btn-pink:hover {
-  transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 14px 40px rgba(255,62,155,0.45);
+  transform: translateY(-2px);
+  background: var(--k-pink);
+  box-shadow: 0 0 20px rgba(255, 64, 129, 0.3);
 }
 
 .btn-ghost {
   color: var(--text);
-  background: var(--surface);
-  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(12px);
 }
 .btn-ghost:hover {
-  border-color: var(--k-blue);
-  background: var(--surface-hover);
+  border-color: var(--k-yellow);
+  background: rgba(255, 255, 255, 0.06);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-lg {
-  padding: 1.1rem 2.4rem;
-  font-size: 1.08rem;
+  padding: 1.1rem 2.6rem;
+  font-size: 1rem;
 }
 
 .btn-sm {
-  padding: 0.55rem 1.2rem;
-  font-size: 0.83rem;
+  padding: 0.55rem 1.3rem;
+  font-size: 0.8rem;
 }
 
 .cta-row {
@@ -1854,11 +1859,16 @@ body:has(button:hover) #cursor-ring {
 .theme-toggle {
   width: 56px; height: 30px;
   border-radius: var(--r-full);
-  background: var(--surface);
+  background: var(--surface-2);
   border: 1.5px solid var(--border);
   position: relative;
   cursor: pointer;
   transition: all 0.3s ease !important;
+}
+
+.theme-toggle:hover {
+  border-color: #ff4081;
+  box-shadow: 0 0 10px rgba(255, 64, 129, 0.2);
 }
 
 .theme-toggle-thumb {
@@ -1866,17 +1876,18 @@ body:has(button:hover) #cursor-ring {
   border-radius: 50%;
   position: absolute;
   top: 2px; left: 2px;
-  background: var(--grad-sunny);
+  background: linear-gradient(135deg, #FFC81E 0%, #ff4081 100%);
   transition: transform 0.35s var(--ease-spring) !important;
   display: grid;
   place-items: center;
   font-size: 0.76rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(255, 64, 129, 0.3);
 }
 
 [data-theme="dark"] .theme-toggle-thumb {
   transform: translateX(26px);
-  background: var(--grad-sky);
+  background: linear-gradient(135deg, #ff4081 0%, #00e5ff 100%);
+  box-shadow: 0 2px 8px rgba(0, 229, 255, 0.4);
 }
 
 /* ============================================================
@@ -2259,8 +2270,6 @@ body:has(button:hover) #cursor-ring {
 
 [dir="rtl"] .story-card-item:hover  { transform: translateX(-7px); }
 [dir="rtl"] .footer-col a:hover     { transform: translateX(-4px); }
-[dir="rtl"] .theme-toggle-thumb     { left: auto; right: 2px; }
-[dir="rtl"] [data-theme="dark"] .theme-toggle-thumb { transform: translateX(-26px); }
 
 /* ============================================================
    RESPONSIVE
@@ -2285,12 +2294,12 @@ body:has(button:hover) #cursor-ring {
 
 
 /* ============================================================
-   AUTH-LAYOUT � login/register responsive layout
+   AUTH-LAYOUT � login/register responsive layout
    Desktop: illustration LEFT | form RIGHT (50/50 grid)
    Mobile:  illustration on TOP (compact) + form BELOW (centered)
    ============================================================ */
 
-/* Desktop layout � both classes */
+/* Desktop layout � both classes */
 .auth-layout,
 .auth-wrap {
   min-height: 100vh;

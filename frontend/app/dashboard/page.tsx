@@ -1,14 +1,17 @@
-﻿'use client';
+'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { useLang } from '@/context/LangContext';
-import { apiGetStories, Story, apiGetActiveSubscription, Subscription } from '@/lib/api';
+import { apiGetStories, Story, apiGetActiveSubscription, Subscription, LimitDetails } from '@/lib/api';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { Loader2, BookOpen, Video, ImageIcon, User, Crown, Sparkles, ArrowRight, Clock } from 'lucide-react';
+import { 
+  Loader2, BookOpen, Video, Image as ImageIcon, User, Crown, 
+  ArrowRight, HardDrive, Plus, Calendar, Settings, FileText 
+} from 'lucide-react';
 
 export default function DashboardPage() {
   const { isLoggedIn, user } = useAuth();
@@ -16,6 +19,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const [stories, setStories] = useState<Story[]>([]);
   const [activeSub, setActiveSub] = useState<Subscription | null>(null);
+  const [storyLimits, setStoryLimits] = useState<LimitDetails | null>(null);
+  const [videoLimits, setVideoLimits] = useState<LimitDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isRTL = locale === 'ar';
@@ -24,217 +29,305 @@ export default function DashboardPage() {
     if (!isLoggedIn) router.push('/login');
   }, [isLoggedIn, router]);
 
+  const loadDashboardData = useCallback(async () => {
+    try {
+      const [storiesData, subData] = await Promise.all([
+        apiGetStories(),
+        apiGetActiveSubscription()
+      ]);
+      setStories(storiesData.data || []);
+      setActiveSub(subData.subscription);
+      if (subData.story_limits) setStoryLimits(subData.story_limits);
+      if (subData.video_limits) setVideoLimits(subData.video_limits);
+    } catch (err) {
+      console.error(err);
+      setStories([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isLoggedIn) return;
-    const loadDashboardData = async () => {
-      try {
-        const [storiesData, subData] = await Promise.all([
-          apiGetStories(),
-          apiGetActiveSubscription()
-        ]);
-        setStories(storiesData.data || []);
-        setActiveSub(subData.subscription);
-      } catch {
-        setStories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadDashboardData();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, loadDashboardData]);
 
   if (!isLoggedIn) return null;
 
   const firstName = user?.name?.split(' ')[0] ?? '';
-  const greeting = isRTL ? `مرحباً، ${firstName}` : `Welcome back, ${firstName}`;
+  const greeting = isRTL ? `مرحباً بعودتك، ${user?.name}` : `Welcome back, ${user?.name}`;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#070708] text-gray-100 font-sans" dir={isRTL ? 'rtl' : 'ltr'}>
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-10"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">
-              {isRTL ? 'استوديو القصص' : 'Story Studio'}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16">
+        {/* Welcome Header */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 bg-gradient-to-r from-gray-900 via-gray-900/50 to-transparent p-6 rounded-2xl border border-gray-800">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-2xl shadow-inner">
+              {user?.name?.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">{greeting}</h1>
+              <p className="text-gray-400 text-sm mt-1">
+                {isRTL 
+                  ? 'قم بإدارة قصصك المصورة والخدمات الإضافية المتاحة في حسابك.' 
+                  : 'Manage your animated story generation, active subscription and addons.'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+            <Crown size={16} className="text-indigo-400" />
+            <span className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">
+              {activeSub ? activeSub.plan?.name : (isRTL ? 'الخطة المجانية' : 'Free Account')}
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            {greeting} <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500">✦</span>
-          </h1>
-          <p className="text-gray-400 text-lg">
-            {isRTL ? 'استوديو القصص الاصطناعي الخاص بك في انتظارك.' : 'Your AI story studio is waiting for you.'}
-          </p>
-        </motion.div>
+        </div>
 
-        {/* Hero CTA Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a1a1a] to-[#111] border border-[#333] p-8 mb-8"
-        >
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle,_rgba(234,179,8,0.1),_transparent_70%)]" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(circle,_rgba(236,72,153,0.08),_transparent_70%)]" />
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-[#0f0f12] p-5 rounded-2xl border border-gray-800 flex items-center gap-4 hover:border-gray-700 transition-colors">
+            <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
+              <BookOpen size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 font-medium">{isRTL ? 'القصص هذا الشهر' : 'Stories This Month'}</p>
+              <h4 className="text-lg font-bold mt-0.5 text-white">
+                {storyLimits ? (
+                  `${storyLimits.usage} / ${storyLimits.is_unlimited ? '∞' : storyLimits.total_limit}`
+                ) : (
+                  stories.length
+                )}
+              </h4>
+              {storyLimits && (
+                <p className="text-[10px] text-gray-500 mt-1">
+                  {isRTL ? 'اليوم:' : 'Today:'} {storyLimits.daily_usage} / {storyLimits.is_daily_unlimited ? '∞' : storyLimits.daily_total_limit}
+                </p>
+              )}
+            </div>
+          </div>
 
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-pink-500 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+          <div className="bg-[#0f0f12] p-5 rounded-2xl border border-gray-800 flex items-center gap-4 hover:border-gray-700 transition-colors">
+            <div className="p-3 bg-pink-500/10 text-pink-400 rounded-xl">
+              <Video size={20} />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-500 font-medium">{isRTL ? 'الفيديوهات هذا الشهر' : 'Videos This Month'}</p>
+              <h4 className="text-lg font-bold mt-0.5 text-white">
+                {videoLimits ? (
+                  `${videoLimits.usage} / ${videoLimits.is_unlimited ? '∞' : videoLimits.total_limit}`
+                ) : (
+                  '0'
+                )}
+              </h4>
+              {videoLimits && (
+                <p className="text-[10px] text-gray-500 mt-1">
+                  {isRTL ? 'اليوم:' : 'Today:'} {videoLimits.daily_usage} / {videoLimits.is_daily_unlimited ? '∞' : videoLimits.daily_total_limit}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-[#0f0f12] p-5 rounded-2xl border border-gray-800 flex items-center gap-4 hover:border-gray-700 transition-colors">
+            <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+              <ImageIcon size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-medium">{isRTL ? 'الصور في المعرض' : 'Gallery Images'}</p>
+              <h4 className="text-xl font-bold mt-0.5 text-white">0</h4>
+            </div>
+          </div>
+
+          <div className="bg-[#0f0f12] p-5 rounded-2xl border border-gray-800 flex items-center gap-4 hover:border-gray-700 transition-colors">
+            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+              <HardDrive size={20} />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 font-medium">{isRTL ? 'المساحة المستخدمة' : 'Storage Used'}</p>
+              <h4 className="text-xl font-bold mt-0.5 text-white">0.0 MB</h4>
+            </div>
+          </div>
+        </div>
+
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Stories Section */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white">{isRTL ? 'القصص الأخيرة' : 'Recent Stories'}</h3>
+              <Link 
+                href="/create-story" 
+                className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-400 hover:text-indigo-300"
+              >
+                {isRTL ? 'إنشاء قصة جديدة' : 'Create new story'}
+                <Plus size={14} />
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-20 bg-[#0f0f12] border border-gray-800 rounded-2xl">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
               </div>
-              <h2 className="text-2xl font-bold">{isRTL ? 'ابدأ قصتك الأولى' : 'Create your first story'}</h2>
-            </div>
-            <p className="text-gray-400 max-w-lg mb-6 text-lg">
-              {isRTL
-                ? 'ارفع صورة طفلك وشاهد العالم السينمائي يُولد في ثوانٍ.'
-                : 'Upload a photo of your child and watch a cinematic world be born in seconds.'}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/create-story"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-500 via-amber-400 to-pink-500 hover:from-yellow-400 hover:via-amber-300 hover:to-pink-400 text-black font-bold rounded-xl transition-all"
-              >
-                {isRTL ? 'إنشاء قصة' : 'Create Story'}
-                <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-              </Link>
-              <Link
-                href="/#how"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-white font-medium rounded-xl transition-all"
-              >
-                {isRTL ? 'عرض الأمثلة' : 'View Examples'}
-              </Link>
-            </div>
+            ) : stories.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center bg-[#0f0f12] border border-gray-800 rounded-2xl">
+                <BookOpen size={48} className="text-gray-600 mb-4 opacity-50" />
+                <p className="text-gray-400 text-sm mb-4">{isRTL ? 'لم تقم بإنشاء أي قصص بعد.' : 'You haven\'t created any stories yet.'}</p>
+                <Link
+                  href="/create-story"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition-colors shadow-sm"
+                >
+                  {isRTL ? 'ابدأ كتابة قصتك الأولى' : 'Start your first story'}
+                  <ArrowRight size={14} className={isRTL ? 'rotate-180' : ''} />
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {stories.map((story) => (
+                  <Link
+                    key={story.id}
+                    href={`/stories/${story.id}`}
+                    className="group bg-[#0f0f12] hover:bg-[#131317] border border-gray-800 hover:border-gray-700 rounded-2xl p-5 transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border
+                          ${story.status === 'completed' 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                          {story.status === 'completed' ? (isRTL ? 'جاهز' : 'Ready') : (isRTL ? 'معالجة' : 'Processing')}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {story.created_at ? new Date(story.created_at).toLocaleDateString(locale) : ''}
+                        </span>
+                      </div>
+                      <h4 className="font-bold text-white group-hover:text-indigo-400 transition-colors line-clamp-1 mb-1.5">{story.title}</h4>
+                      <p className="text-xs text-gray-400 line-clamp-2">{story.theme || (isRTL ? 'لا يوجد موضوع متاح' : 'No theme provided')}</p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-6 pt-3 border-t border-gray-800/80">
+                      <span className="text-xs font-semibold text-indigo-400 group-hover:underline flex items-center gap-1">
+                        {isRTL ? 'عرض القصة' : 'View Story'}
+                        <ArrowRight size={12} className={isRTL ? 'rotate-180' : ''} />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-        </motion.div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* My Stories */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#333] transition-colors"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-blue-400" />
+          {/* Sidebar Area */}
+          <div className="space-y-6">
+            {/* Active Subscription Details */}
+            <div className="bg-[#0f0f12] border border-gray-800 rounded-2xl p-5">
+              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <Crown size={16} className="text-indigo-400" />
+                {isRTL ? 'تفاصيل الاشتراك' : 'Subscription Status'}
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="bg-[#070708] p-3 rounded-xl border border-gray-800">
+                  <span className="text-xs text-gray-500 block">{isRTL ? 'الخطة الحالية' : 'Current Plan'}</span>
+                  <span className="font-bold text-white block mt-0.5">{activeSub ? activeSub.plan?.name : (isRTL ? 'حساب مجاني' : 'Free Account')}</span>
                 </div>
-                <span className="text-2xl font-bold text-white">{stories.length}</span>
-              </div>
-              <h3 className="font-semibold mb-1">{isRTL ? 'قصصي' : 'My Stories'}</h3>
-              {stories.length === 0 ? (
-                <p className="text-gray-500 text-sm">{isRTL ? 'لا توجد قصص بعد' : 'No stories yet'}</p>
-              ) : (
-                <div className="space-y-2 mt-3">
-                  {stories.slice(0, 3).map((story) => (
-                    <Link
-                      key={story.id}
-                      href={`/stories/${story.id}`}
-                      className="flex items-center gap-3 p-2 rounded-lg bg-[#1a1a1a] hover:bg-[#222] transition-colors group"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500/20 to-pink-500/20 flex items-center justify-center flex-shrink-0">
-                        <ImageIcon className="w-4 h-4 text-yellow-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate group-hover:text-yellow-400 transition-colors">{story.title}</p>
-                        <p className="text-xs text-gray-500">
-                          {story.status === 'completed' ? (isRTL ? '✓ جاهز' : '✓ Ready') : story.status === 'processing' ? (isRTL ? 'جاري المعالجة...' : 'Processing...') : (isRTL ? 'مسودة' : 'Draft')}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                  {stories.length > 3 && (
-                    <p className="text-xs text-gray-500 text-center">+{stories.length - 3} {isRTL ? 'المزيد' : 'more'}</p>
+
+                <div className="space-y-2 bg-[#070708] p-3 rounded-xl border border-gray-800 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">{isRTL ? 'القصص المتبقية' : 'Remaining Stories'}:</span>
+                    <span className="font-bold text-white">
+                      {storyLimits ? (storyLimits.is_unlimited ? (isRTL ? 'غير محدود' : 'Unlimited') : storyLimits.remaining) : 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">{isRTL ? 'الفيديوهات المتبقية' : 'Remaining Videos'}:</span>
+                    <span className="font-bold text-white">
+                      {videoLimits ? (videoLimits.is_unlimited ? (isRTL ? 'غير محدود' : 'Unlimited') : videoLimits.remaining) : 0}
+                    </span>
+                  </div>
+                  {activeSub && (
+                    <div className="flex justify-between pt-1.5 border-t border-gray-800/80">
+                      <span className="text-gray-500">{isRTL ? 'الأيام المتبقية للاشتراك' : 'Days Remaining'}:</span>
+                      <span className="font-bold text-indigo-400">
+                        {storyLimits ? storyLimits.days_remaining : 0} {isRTL ? 'أيام' : 'days'}
+                      </span>
+                    </div>
                   )}
                 </div>
-              )}
-            </motion.div>
 
-            {/* My Videos */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#333] transition-colors"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center">
-                  <Video className="w-5 h-5 text-pink-400" />
-                </div>
-                <span className="text-2xl font-bold text-white">0</span>
-              </div>
-              <h3 className="font-semibold mb-1">{isRTL ? 'فيديوهاتي' : 'My Videos'}</h3>
-              <p className="text-gray-500 text-sm">{isRTL ? 'لا توجد فيديوهات بعد' : 'No videos yet'}</p>
-              <Link href="/create-story" className="inline-flex items-center gap-1 mt-4 text-sm text-yellow-400 hover:text-yellow-300 transition-colors">
-                {isRTL ? 'إنشاء فيديو' : 'Create video'}
-                <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
-              </Link>
-            </motion.div>
+                {((storyLimits && storyLimits.addon_limit > 0) || (videoLimits && videoLimits.addon_limit > 0)) && (
+                  <div className="bg-[#070708] p-3 rounded-xl border border-gray-800 text-xs space-y-1">
+                    <span className="text-gray-400 font-bold block mb-1">{isRTL ? 'الزيادات النشطة (Add-ons)' : 'Active Add-ons'}:</span>
+                    {storyLimits && storyLimits.addon_limit > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">{isRTL ? 'قصص إضافية' : 'Extra Stories'}:</span>
+                        <span className="font-semibold text-indigo-400">+{storyLimits.addon_limit}</span>
+                      </div>
+                    )}
+                    {videoLimits && videoLimits.addon_limit > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">{isRTL ? 'فيديوهات إضافية' : 'Extra Videos'}:</span>
+                        <span className="font-semibold text-indigo-400">+{videoLimits.addon_limit}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-            {/* Gallery */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#333] transition-colors"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                  <ImageIcon className="w-5 h-5 text-amber-400" />
-                </div>
-                <span className="text-2xl font-bold text-white">0</span>
-              </div>
-              <h3 className="font-semibold mb-1">{isRTL ? 'معرضي' : 'My Gallery'}</h3>
-              <p className="text-gray-500 text-sm">{isRTL ? 'لا توجد صور بعد' : 'No images yet'}</p>
-              <Link href="/create-story" className="inline-flex items-center gap-1 mt-4 text-sm text-yellow-400 hover:text-yellow-300 transition-colors">
-                {isRTL ? 'إنشاء صورة' : 'Create image'}
-                <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
-              </Link>
-            </motion.div>
+                {activeSub && activeSub.current_period_end && (
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <Calendar size={14} className="text-indigo-400" />
+                    <span>
+                      {isRTL ? 'ينتهي في:' : 'Renews on:'} {new Date(activeSub.current_period_end).toLocaleDateString(locale)}
+                    </span>
+                  </div>
+                )}
 
-            {/* Account */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="bg-[#111] border border-[#222] rounded-2xl p-6 hover:border-[#333] transition-colors"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                  <User className="w-5 h-5 text-emerald-400" />
+                <div className="pt-2">
+                  <Link
+                    href="/billing"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm"
+                  >
+                    {activeSub ? (isRTL ? 'إدارة خطتي وترقيتها' : 'Manage & Upgrade Plan') : (isRTL ? 'الترقية لباقة مدفوعة' : 'Upgrade to Premium')}
+                    <ArrowRight size={14} className={isRTL ? 'rotate-180' : ''} />
+                  </Link>
                 </div>
               </div>
-              <h3 className="font-semibold mb-1">{isRTL ? 'الحساب' : 'Account'}</h3>
-              <p className="text-white font-medium text-sm mb-1">{user?.name}</p>
-              <p className="text-gray-500 text-sm mb-3">{user?.email}</p>
-              <div className="flex items-center gap-2 mb-3">
-                <Crown className="w-3.5 h-3.5 text-yellow-400" />
-                <span className="text-xs font-semibold text-yellow-400 uppercase">
-                  {activeSub ? activeSub.plan?.name : (isRTL ? 'الخطة المجانية' : 'Free Plan')}
-                </span>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-[#0f0f12] border border-gray-800 rounded-2xl p-5">
+              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <Settings size={16} className="text-indigo-400" />
+                {isRTL ? 'إجراءات سريعة' : 'Quick Actions'}
+              </h3>
+
+              <div className="grid grid-cols-1 gap-2">
+                <Link
+                  href="/create-story"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#070708] border border-gray-800 hover:border-gray-700 hover:bg-[#131317] transition-all text-xs font-medium text-gray-300"
+                >
+                  <span className="flex items-center gap-2">
+                    <BookOpen size={14} className="text-indigo-400" />
+                    {isRTL ? 'إنشاء قصة مصورة' : 'Create Animated Story'}
+                  </span>
+                  <Plus size={14} />
+                </Link>
+
+                <Link
+                  href="/billing"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#070708] border border-gray-800 hover:border-gray-700 hover:bg-[#131317] transition-all text-xs font-medium text-gray-300"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileText size={14} className="text-indigo-400" />
+                    {isRTL ? 'الفواتير ومعاملات الدفع' : 'Billing & Invoice History'}
+                  </span>
+                  <ArrowRight size={14} className={isRTL ? 'rotate-180' : ''} />
+                </Link>
               </div>
-              <Link
-                href="/billing"
-                className="inline-flex items-center gap-1 text-sm text-yellow-400 hover:text-yellow-300 transition-colors"
-              >
-                {activeSub ? (isRTL ? 'إدارة الاشتراك' : 'Manage subscription') : (isRTL ? 'ترقية الخطة' : 'Upgrade plan')}
-                <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
-              </Link>
-            </motion.div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

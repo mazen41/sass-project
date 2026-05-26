@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\AuthSetting;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
@@ -14,17 +15,29 @@ class SocialAuthController extends Controller
     /**
      * Get the social auth URL for a provider.
      */
-    public function redirect(string $provider): JsonResponse
+    public function redirect(Request $request, string $provider): JsonResponse
     {
         $allowed = ['google', 'facebook', 'apple'];
         if (!in_array($provider, $allowed)) {
             return response()->json(['error' => 'Invalid provider'], 400);
         }
 
-        $url = Socialite::driver($provider)
-            ->stateless()
-            ->redirect()
-            ->getTargetUrl();
+        // Rate limit: 10 attempts per minute per IP
+        $key = 'social_auth_redirect:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 10)) {
+            return response()->json(['error' => 'Too many authentication attempts. Please wait.'], 429);
+        }
+        RateLimiter::hit($key, 60);
+
+        $driver = Socialite::driver($provider)->stateless();
+
+        // Apply dynamic callback URL from admin settings if configured
+        $callbackUrl = $this->getCallbackUrl($provider);
+        if ($callbackUrl) {
+            $driver->redirectUrl($callbackUrl);
+        }
+
+        $url = $driver->redirect()->getTargetUrl();
 
         return response()->json(['url' => $url]);
     }
@@ -32,22 +45,39 @@ class SocialAuthController extends Controller
     /**
      * Handle the callback from a social provider.
      */
-    public function callback(string $provider): JsonResponse
+    public function callback(Request $request, string $provider)
     {
         $allowed = ['google', 'facebook', 'apple'];
+        $frontendUrl = rtrim(config('app.frontend_url', 'http://localhost:3000'), '/');
+
         if (!in_array($provider, $allowed)) {
-            return response()->json(['error' => 'Invalid provider'], 400);
+            return redirect()->to("{$frontendUrl}/login?error=" . urlencode('Invalid authentication provider.'));
         }
 
+        // Rate limit: 10 attempts per minute per IP
+        $key = 'social_auth_callback:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 10)) {
+            return redirect()->to("{$frontendUrl}/login?error=" . urlencode('Too many authentication attempts. Please try again later.'));
+        }
+        RateLimiter::hit($key, 60);
+
         try {
-            $socialUser = Socialite::driver($provider)->stateless()->user();
+            $driver = Socialite::driver($provider)->stateless();
+
+            // Apply dynamic callback URL from admin settings if configured
+            $callbackUrl = $this->getCallbackUrl($provider);
+            if ($callbackUrl) {
+                $driver->redirectUrl($callbackUrl);
+            }
+
+            $socialUser = $driver->user();
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Authentication failed: ' . $e->getMessage()], 401);
+            return redirect()->to("{$frontendUrl}/login?error=" . urlencode('Authentication failed: ' . $e->getMessage()));
         }
 
         $email = $socialUser->getEmail();
         if (!$email) {
-            return response()->json(['error' => 'Email not provided by ' . ucfirst($provider)], 400);
+            return redirect()->to("{$frontendUrl}/login?error=" . urlencode('Email not provided by ' . ucfirst($provider)));
         }
 
         // Check if user already exists
@@ -80,18 +110,28 @@ class SocialAuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'message' => 'Login successful.',
-            'user'    => $user,
-            'token'   => $token,
+        $params = http_build_query([
+            'token' => $token,
+            'id'    => $user->id,
+            'name'  => $user->name,
+            'email' => $user->email,
+            'role'  => $user->role,
         ]);
+
+        return redirect()->to("{$frontendUrl}/auth/callback?{$params}");
     }
 
     /**
-     * Handle social login for admin (returns user but frontend checks role).
+     * Get the configured callback URL for a provider from admin settings.
      */
-    public function adminCallback(string $provider): JsonResponse
+    private function getCallbackUrl(string $provider): ?string
     {
-        return $this->callback($provider);
+        $settings = AuthSetting::first();
+        if (!$settings) {
+            return null;
+        }
+
+        $field = "{$provider}_callback_url";
+        return !empty($settings->$field) ? $settings->$field : null;
     }
 }

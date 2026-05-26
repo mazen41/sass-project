@@ -146,6 +146,10 @@ export interface Plan {
   slug: string;
   description: string | null;
   price: string;
+  story_limit?: number;
+  video_limit?: number;
+  daily_story_limit?: number;
+  daily_video_limit?: number;
   billing_period: 'monthly' | 'yearly';
   features: string[] | null;
   is_active: boolean;
@@ -404,6 +408,36 @@ export async function apiGetSystemHealth(): Promise<SystemHealth> {
   return apiFetch<SystemHealth>('/admin/system-health');
 }
 
+// ── Auth Settings ────────────────────────────────────────────────────────────
+
+export interface AuthSettings {
+  allow_admin_social_auth: boolean;
+  allow_admin_signup: boolean;
+  google_active?: boolean;
+  google_client_id?: string | null;
+  google_client_secret?: string | null;
+  google_callback_url?: string | null;
+  facebook_active?: boolean;
+  facebook_client_id?: string | null;
+  facebook_client_secret?: string | null;
+  facebook_callback_url?: string | null;
+  apple_active?: boolean;
+  apple_client_id?: string | null;
+  apple_client_secret?: string | null;
+  apple_callback_url?: string | null;
+}
+
+export async function apiGetAuthSettings(): Promise<{ settings: AuthSettings }> {
+  return apiFetch<{ settings: AuthSettings }>('/settings/auth');
+}
+
+export async function apiUpdateAuthSettings(data: AuthSettings): Promise<{ message: string; settings: AuthSettings }> {
+  return apiFetch<{ message: string; settings: AuthSettings }>('/admin/auth-settings', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
 // ── Mail ─────────────────────────────────────────────────────────────────────
 
 export interface MailSetting {
@@ -571,14 +605,39 @@ export function apiGetDownloadBackupUrl(): string {
   return `${API_URL}/admin/backup-settings/download${token ? `?api_token=${token}` : ''}`;
 }
 
-// ── User Billing ─────────────────────────────────────────────────────────────
-
-export async function apiGetBillingPlans(): Promise<{ plans: Plan[] }> {
-  return apiFetch<{ plans: Plan[] }>('/billing/plans');
+export interface LimitDetails {
+  base_limit: number;
+  addon_limit: number;
+  total_limit: number;
+  usage: number;
+  remaining: number;
+  is_unlimited: boolean;
+  daily_base_limit: number;
+  daily_addon_limit: number;
+  daily_total_limit: number;
+  daily_usage: number;
+  daily_remaining: number;
+  is_daily_unlimited: boolean;
+  days_remaining: number;
 }
 
-export async function apiGetActiveSubscription(): Promise<{ subscription: Subscription | null }> {
-  return apiFetch<{ subscription: Subscription | null }>('/billing/subscription');
+// ── User Billing ─────────────────────────────────────────────────────────────
+
+export async function apiGetBillingPlans(): Promise<{ plans: Plan[]; gateways?: string[] }> {
+  return apiFetch<{ plans: Plan[]; gateways?: string[] }>('/billing/plans');
+}
+
+export async function apiGetActiveSubscription(): Promise<{ 
+  subscription: Subscription | null;
+  story_limits?: LimitDetails;
+  video_limits?: LimitDetails;
+  gateways?: string[];
+}> {
+  return apiFetch<{ 
+    subscription: Subscription | null;
+    story_limits?: LimitDetails;
+    video_limits?: LimitDetails;
+  }>('/billing/subscription');
 }
 
 export async function apiSubscribeStripe(planId: number): Promise<{ url: string }> {
@@ -599,4 +658,275 @@ export async function apiUserCancelSubscription(): Promise<{ message: string; su
   return apiFetch<{ message: string; subscription: Subscription }>('/billing/subscription/cancel', {
     method: 'POST',
   });
+}
+
+// ── Landing Page Settings ──────────────────────────────────
+
+export interface FAQItem {
+  q_en: string;
+  a_en: string;
+  q_ar: string;
+  a_ar: string;
+}
+
+export interface SocialLinks {
+  facebook?: string;
+  twitter?: string;
+  instagram?: string;
+  youtube?: string;
+}
+
+export interface FooterLink {
+  label_en: string;
+  label_ar: string;
+  url: string;
+}
+
+export interface FooterSection {
+  title_en: string;
+  title_ar: string;
+  links: FooterLink[];
+}
+
+export interface LandingPageSettings {
+  id?: number;
+  faqs: FAQItem[];
+  footer_tagline_en: string;
+  footer_tagline_ar: string;
+  contact_email: string;
+  contact_phone: string;
+  social_links: SocialLinks;
+  privacy_policy_en: string;
+  privacy_policy_ar: string;
+  terms_of_service_en: string;
+  terms_of_service_ar: string;
+  footer_sections?: FooterSection[];
+  about_content_en?: string;
+  about_content_ar?: string;
+  careers_content_en?: string;
+  careers_content_ar?: string;
+  examples_content_en?: string;
+  examples_content_ar?: string;
+}
+
+export async function apiGetLandingSettings(): Promise<{ settings: LandingPageSettings }> {
+  return apiFetch<{ settings: LandingPageSettings }>('/settings/landing');
+}
+
+export async function apiUpdateLandingSettings(data: Partial<LandingPageSettings>): Promise<{ message: string; settings: LandingPageSettings }> {
+  return apiFetch<{ message: string; settings: LandingPageSettings }>('/admin/landing-settings', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiForgotPassword(email: string): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function apiResetPassword(data: Record<string, string>): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>('/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Blog Posts ───────────────────────────────────────────────────────────────
+
+export interface BlogPost {
+  id?: number;
+  title_en: string;
+  title_ar: string;
+  slug: string;
+  content_en: string;
+  content_ar: string;
+  category_en: string;
+  category_ar: string;
+  image_url?: string | null;
+  author_en?: string;
+  author_ar?: string;
+  is_published: boolean;
+  published_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function apiGetBlogPosts(params?: Record<string, string>): Promise<PaginatedResponse<BlogPost>> {
+  const query = params ? '?' + new URLSearchParams(params).toString() : '';
+  return apiFetch<PaginatedResponse<BlogPost>>(`/blog${query}`);
+}
+
+export async function apiGetBlogPost(slug: string): Promise<{ post: BlogPost }> {
+  return apiFetch<{ post: BlogPost }>(`/blog/${slug}`);
+}
+
+export async function apiGetAdminBlogPosts(params?: Record<string, string>): Promise<PaginatedResponse<BlogPost>> {
+  const query = params ? '?' + new URLSearchParams(params).toString() : '';
+  return apiFetch<PaginatedResponse<BlogPost>>(`/admin/blog${query}`);
+}
+
+export async function apiCreateBlogPost(data: Partial<BlogPost>): Promise<{ message: string; post: BlogPost }> {
+  return apiFetch<{ message: string; post: BlogPost }>('/admin/blog', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiUpdateBlogPost(id: number, data: Partial<BlogPost>): Promise<{ message: string; post: BlogPost }> {
+  return apiFetch<{ message: string; post: BlogPost }>(`/admin/blog/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiDeleteBlogPost(id: number): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`/admin/blog/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function apiUploadBlogPostImage(file: File): Promise<{ url: string }> {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('image', file);
+
+  const res = await fetch(`${API_URL}/admin/blog/upload`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || 'Image upload failed');
+  }
+  return data;
+}
+
+// ── Plan Add-Ons ─────────────────────────────────────────────────────────────
+
+export interface PlanAddon {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: string;
+  story_limit?: number;
+  video_limit?: number;
+  daily_story_limit?: number;
+  daily_video_limit?: number;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export async function apiGetAddons(): Promise<{ addons: PlanAddon[] }> {
+  return apiFetch<{ addons: PlanAddon[] }>('/billing/addons');
+}
+
+export async function apiPurchaseAddon(addonId: number): Promise<{ message: string; invoice: InvoiceRecord }> {
+  return apiFetch<{ message: string; invoice: InvoiceRecord }>('/billing/addons/purchase', {
+    method: 'POST',
+    body: JSON.stringify({ addon_id: addonId }),
+  });
+}
+
+// Admin Add-On Management
+export async function apiGetAdminAddons(): Promise<{ addons: PlanAddon[] }> {
+  return apiFetch<{ addons: PlanAddon[] }>('/admin/addons');
+}
+
+export async function apiCreateAddon(data: Partial<PlanAddon>): Promise<{ message: string; addon: PlanAddon }> {
+  return apiFetch<{ message: string; addon: PlanAddon }>('/admin/addons', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiUpdateAddon(id: number, data: Partial<PlanAddon>): Promise<{ message: string; addon: PlanAddon }> {
+  return apiFetch<{ message: string; addon: PlanAddon }>(`/admin/addons/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function apiDeleteAddon(id: number): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`/admin/addons/${id}`, { method: 'DELETE' });
+}
+
+// ── Billing Upgrade/Downgrade ────────────────────────────────────────────────
+
+export async function apiUpgradePlan(planId: number): Promise<{ message: string; subscription: Subscription }> {
+  return apiFetch<{ message: string; subscription: Subscription }>('/billing/upgrade', {
+    method: 'POST',
+    body: JSON.stringify({ plan_id: planId }),
+  });
+}
+
+export async function apiDowngradePlan(planId: number): Promise<{ message: string; subscription: Subscription }> {
+  return apiFetch<{ message: string; subscription: Subscription }>('/billing/downgrade', {
+    method: 'POST',
+    body: JSON.stringify({ plan_id: planId }),
+  });
+}
+
+// ── Invoices ─────────────────────────────────────────────────────────────────
+
+export interface InvoiceRecord {
+  id: number;
+  user_id: number;
+  subscription_id: number | null;
+  invoice_number: string;
+  amount: string;
+  currency: string;
+  status: 'paid' | 'pending' | 'refunded' | 'failed';
+  items: Array<{ name: string; price: string; type: string }> | null;
+  billing_address: Record<string, string> | null;
+  gateway: string | null;
+  gateway_transaction_id: string | null;
+  issued_at: string | null;
+  paid_at: string | null;
+  created_at: string;
+  user?: AuthUser;
+  subscription?: Subscription;
+}
+
+export async function apiGetUserInvoices(params?: Record<string, string>): Promise<PaginatedResponse<InvoiceRecord>> {
+  const query = params ? '?' + new URLSearchParams(params).toString() : '';
+  return apiFetch<PaginatedResponse<InvoiceRecord>>(`/billing/invoices${query}`);
+}
+
+export async function apiGetInvoiceDetail(id: number): Promise<{ invoice: InvoiceRecord }> {
+  return apiFetch<{ invoice: InvoiceRecord }>(`/billing/invoices/${id}`);
+}
+
+// Admin Invoices
+export async function apiGetAdminInvoices(params?: Record<string, string>): Promise<PaginatedResponse<InvoiceRecord>> {
+  const query = params ? '?' + new URLSearchParams(params).toString() : '';
+  return apiFetch<PaginatedResponse<InvoiceRecord>>(`/admin/invoices${query}`);
+}
+
+export async function apiGetAdminInvoice(id: number): Promise<{ invoice: InvoiceRecord }> {
+  return apiFetch<{ invoice: InvoiceRecord }>(`/admin/invoices/${id}`);
+}
+
+export async function apiMarkInvoicePaid(id: number): Promise<{ message: string; invoice: InvoiceRecord }> {
+  return apiFetch<{ message: string; invoice: InvoiceRecord }>(`/admin/invoices/${id}/mark-paid`, { method: 'POST' });
+}
+
+export async function apiMarkInvoiceRefunded(id: number): Promise<{ message: string; invoice: InvoiceRecord }> {
+  return apiFetch<{ message: string; invoice: InvoiceRecord }>(`/admin/invoices/${id}/mark-refunded`, { method: 'POST' });
+}
+
+export async function apiResendInvoiceEmail(id: number): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(`/admin/invoices/${id}/resend-email`, { method: 'POST' });
+}
+
+export async function apiGetInvoiceStats(): Promise<{ total: number; paid: number; pending: number; refunded: number; total_revenue: string }> {
+  return apiFetch<{ total: number; paid: number; pending: number; refunded: number; total_revenue: string }>('/admin/invoices/stats');
 }

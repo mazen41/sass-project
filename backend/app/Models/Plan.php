@@ -12,6 +12,10 @@ class Plan extends Model
         'slug',
         'description',
         'price',
+        'story_limit',
+        'video_limit',
+        'daily_story_limit',
+        'daily_video_limit',
         'billing_period',
         'features',
         'is_active',
@@ -23,6 +27,10 @@ class Plan extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'story_limit' => 'integer',
+        'video_limit' => 'integer',
+        'daily_story_limit' => 'integer',
+        'daily_video_limit' => 'integer',
         'features' => 'array',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
